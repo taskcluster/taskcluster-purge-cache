@@ -8,7 +8,7 @@ var taskcluster = require('taskcluster-client');
 var mocha       = require('mocha');
 var exchanges   = require('../lib/exchanges');
 var bin = {
-  server:         require('../bin/server'),
+  server:         require('../lib/main'),
 };
 
 // Load configuration

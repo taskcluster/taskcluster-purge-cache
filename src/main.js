@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 var debug             = require('debug')('purge-cache:server');
 var base              = require('taskcluster-base');
-var api               = require('../lib/api');
+var api               = require('./api');
 var path              = require('path');
 var Promise           = require('promise');
-var exchanges         = require('../lib/exchanges');
+var exchanges         = require('./exchanges');
 var _                 = require('lodash');
 
 /** Launch server */
