@@ -31,7 +31,7 @@
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0"
   },
   "engines": {
-    "node": "0.12.x",
-    "npm": "2.7.x"
+    "node": "^5.8.0",
+    "npm": "^3.7.3"
   }
 }
