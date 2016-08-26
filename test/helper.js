@@ -7,9 +7,7 @@ var api         = require('../lib/api');
 var taskcluster = require('taskcluster-client');
 var mocha       = require('mocha');
 var exchanges   = require('../lib/exchanges');
-var bin = {
-  server:         require('../lib/main'),
-};
+let load = require('../lib/main');
 
 // Load configuration
 var cfg = base.config({profile: 'test'});
@@ -24,7 +22,7 @@ var helper = module.exports = {};
 
 // Skip tests if no credentials is configured
 if (!cfg.pulse.password) {
-  console.log("Skip tests due to missing credentials!");
+  console.log('Skip tests due to missing credentials!');
   process.exit(1);
 }
 
@@ -40,7 +38,7 @@ mocha.before(async () => {
   // Create mock authentication server
   base.testing.fakeauth.start(testclients);
 
-  webServer = await bin.server('test');
+  webServer = await load('server', {profile: 'test', process: 'test'});
 
   // Create client for working with API
   helper.baseUrl = 'http://localhost:' + webServer.address().port + '/v1';
@@ -55,9 +53,9 @@ mocha.before(async () => {
       baseUrl:          helper.baseUrl,
       credentials: {
         clientId:       'test-client',
-        accessToken:    'none'
+        accessToken:    'none',
       },
-      authorizedScopes: (scopes.length > 0 ? scopes : undefined)
+      authorizedScopes: scopes.length > 0 ? scopes : undefined,
     });
   };
 
@@ -67,7 +65,7 @@ mocha.before(async () => {
   // Create client for binding to reference
   var exchangeReference = exchanges.reference({
     exchangePrefix:   cfg.purgeCache.exchangePrefix,
-    credentials:      cfg.pulse
+    credentials:      cfg.pulse,
   });
   helper.PurgeCacheEvents = taskcluster.createClient(exchangeReference);
   helper.purgeCacheEvents = new helper.PurgeCacheEvents();

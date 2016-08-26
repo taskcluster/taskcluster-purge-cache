@@ -2,14 +2,8 @@
 defaults:
   # TaskCluster purge cache configuration
   purgeCache:
-    # Publish references and schemas
-    publishMetaData:              false
-
     # Prefix for exchanges declared
     exchangePrefix:               'v1/'
-
-    # Component property in the responseTime and process statistics
-    statsComponent:               'purge-cache'
 
   server:
     # Public URL from which the server can be accessed (used for persona)
@@ -31,10 +25,10 @@ defaults:
     username:                 !env PULSE_USERNAME
     password:                 !env PULSE_PASSWORD
 
-  influx:
-    # Usually provided as environment variables must be on the form:
-    # https://<user>:<pwd>@<host>:<port>/db/<database>
-    connectionString:         !env INFLUX_CONNECTION
+  taskcluster:
+    credentials:
+      clientId:                   !env TASKCLUSTER_CLIENT_ID
+      accessToken:                !env TASKCLUSTER_ACCESS_TOKEN
 
     # Maximum delay before submitting pending points
     maxDelay:                       5 * 60
@@ -54,11 +48,6 @@ defaults:
     apiVersion:                     '2014-01-01'
 
 production:
-  purgeCache:
-    # Should be overwritten by environment variable
-    publishMetaData:              false
-    exchangePrefix:               'v1/'
-
   server:
     publicUrl:                    'https://purge-cache.taskcluster.net'
     env:                          'production'
@@ -71,9 +60,6 @@ production:
     username:                     'taskcluster-purge-cache'
 
 test:
-  purgeCache:
-    publishMetaData:              false
-    statsComponent:               'test-queue'
   server:
     publicUrl:                    'http://localhost:60415'
     port:                         60415

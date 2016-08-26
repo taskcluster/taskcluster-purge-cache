@@ -3,8 +3,6 @@ defaults:
   pulse:
     username: "..."
     password: "..."
-  influx:
-    connectionString: "https://<user>:<pwd>@<host>:<port>/db/<database>"
 verify:
   taskcluster:
     # These credentials must have the scopes:
