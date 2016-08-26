@@ -3,6 +3,9 @@ defaults:
   pulse:
     username: "..."
     password: "..."
+  azure:
+    accountName: "..."
+    accountKey: "..."
 verify:
   taskcluster:
     # These credentials must have the scopes:

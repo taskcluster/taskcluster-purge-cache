@@ -65,7 +65,7 @@ mocha.before(async () => {
 
   // Create client for binding to reference
   let exchangeReference = exchanges.reference({
-    exchangePrefix:   cfg.purgeCache.exchangePrefix,
+    exchangePrefix:   cfg.app.exchangePrefix,
     credentials:      cfg.pulse,
   });
   helper.PurgeCacheEvents = taskcluster.createClient(exchangeReference);
