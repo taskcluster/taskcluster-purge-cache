@@ -1,25 +1,25 @@
-var assert      = require('assert');
-var Promise     = require('promise');
-var path        = require('path');
-var _           = require('lodash');
-var api         = require('../lib/api');
-var taskcluster = require('taskcluster-client');
-var mocha       = require('mocha');
-var exchanges   = require('../lib/exchanges');
+let assert      = require('assert');
+let Promise     = require('promise');
+let path        = require('path');
+let _           = require('lodash');
+let api         = require('../lib/api');
+let taskcluster = require('taskcluster-client');
+let mocha       = require('mocha');
+let exchanges   = require('../lib/exchanges');
 let load = require('../lib/main');
 let config      = require('typed-env-config');
 let testing     = require('taskcluster-lib-testing');
 
 // Load configuration
-var cfg = config({profile: 'test'});
+let cfg = config({profile: 'test'});
 
-var testclients = {
+let testclients = {
   'test-client': ['*'],
   'test-server': ['*'],
 };
 
 // Create and export helper object
-var helper = module.exports = {};
+let helper = module.exports = {};
 
 // Skip tests if no credentials is configured
 if (!cfg.pulse.password) {
@@ -31,8 +31,8 @@ if (!cfg.pulse.password) {
 helper.events = new testing.PulseTestReceiver(cfg.pulse, mocha);
 
 // Hold reference to authServer
-var authServer = null;
-var webServer = null;
+let authServer = null;
+let webServer = null;
 
 // Setup before tests
 mocha.before(async () => {
@@ -43,7 +43,7 @@ mocha.before(async () => {
 
   // Create client for working with API
   helper.baseUrl = 'http://localhost:' + webServer.address().port + '/v1';
-  var reference = api.reference({baseUrl: helper.baseUrl});
+  let reference = api.reference({baseUrl: helper.baseUrl});
   helper.PurgeCache = taskcluster.createClient(reference);
   // Utility to create an PurgeCache instance with limited scopes
   helper.scopes = (...scopes) => {
@@ -64,7 +64,7 @@ mocha.before(async () => {
   helper.scopes();
 
   // Create client for binding to reference
-  var exchangeReference = exchanges.reference({
+  let exchangeReference = exchanges.reference({
     exchangePrefix:   cfg.purgeCache.exchangePrefix,
     credentials:      cfg.pulse,
   });

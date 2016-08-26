@@ -1,12 +1,12 @@
-var Exchanges = require('pulse-publisher');
-var assert    = require('assert');
-var _         = require('lodash');
+let Exchanges = require('pulse-publisher');
+let assert    = require('assert');
+let _         = require('lodash');
 
 // Common schema prefix
-var SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
+let SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
 
 /** Declaration of exchanges offered by the purge-cache */
-var exchanges = new Exchanges({
+let exchanges = new Exchanges({
   title:      'Purge-Cache Exchanges',
   description: [
     'The purge-cache service, typically available at',

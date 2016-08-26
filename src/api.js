@@ -1,7 +1,7 @@
-var API      = require('taskcluster-lib-api');
+let API      = require('taskcluster-lib-api');
 
 // Common schema prefix
-var SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
+let SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
 
 /** API end-point for version v1/
  *
@@ -10,7 +10,7 @@ var SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
  *   publisher:      // publisher from pulse-publisher
  * }
  */
-var api = new API({
+let api = new API({
   title:        'Purge Cache API Documentation',
   description: [
     'The purge-cache service, typically available at',
