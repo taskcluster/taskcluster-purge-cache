@@ -1,1 +1,1 @@
-web: node lib/main production
+web: node lib/main server
