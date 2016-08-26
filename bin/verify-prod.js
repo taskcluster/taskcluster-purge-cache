@@ -1,7 +1,7 @@
-var base = require('taskcluster-base');
+var config = require('typed-env-config');
 var taskcluster = require('taskcluster-client');
 
-var cfg = base.config({profile: 'verify'});
+var cfg = config({profile: 'verify'});
 
 var purgeCache = new taskcluster.PurgeCache({
   credentials: cfg.taskcluster.credentials

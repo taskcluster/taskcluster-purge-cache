@@ -1,26 +1,30 @@
 let debug             = require('debug')('purge-cache:server');
-let base              = require('taskcluster-base');
 let api               = require('./api');
 let path              = require('path');
 let Promise           = require('promise');
 let exchanges         = require('./exchanges');
 let _                 = require('lodash');
+let config            = require('typed-env-config');
+let loader            = require('taskcluster-lib-loader');
+let monitor           = require('taskcluster-lib-monitor');
+let validate          = require('taskcluster-lib-validate');
+let server            = require('taskcluster-lib-app');
 
-let load = base.loader({
+let load = loader({
   cfg: {
     requires: ['profile'],
-    setup: ({profile}) => base.config({profile}),
+    setup: ({profile}) => config({profile}),
   },
   validator: {
     requires: ['cfg'],
-    setup: ({cfg}) => base.validator({
+    setup: ({cfg}) => validate({
       prefix:  'purge-cache/v1/',
       aws:      cfg.aws,
     }),
   },
   monitor: {
     requires: ['process', 'profile', 'cfg'],
-    setup: ({process, profile, cfg}) => base.monitor({
+    setup: ({process, profile, cfg}) => monitor({
       project: 'purge-cache',
       credentials: cfg.taskcluster.credentials,
       mock: profile === 'test',
@@ -59,7 +63,7 @@ let load = base.loader({
     setup: ({cfg, api}) => {
 
       debug('Launching server.');
-      let app = base.app(cfg.server);
+      let app = server(cfg.server);
       app.use('/v1', api);
       return app.createServer();
     },

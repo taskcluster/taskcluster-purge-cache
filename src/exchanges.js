@@ -1,4 +1,4 @@
-var base      = require('taskcluster-base');
+var Exchanges = require('pulse-publisher');
 var assert    = require('assert');
 var _         = require('lodash');
 
@@ -6,7 +6,7 @@ var _         = require('lodash');
 var SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
 
 /** Declaration of exchanges offered by the purge-cache */
-var exchanges = new base.Exchanges({
+var exchanges = new Exchanges({
   title:      'Purge-Cache Exchanges',
   description: [
     'The purge-cache service, typically available at',

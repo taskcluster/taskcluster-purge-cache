@@ -2,15 +2,16 @@ var assert      = require('assert');
 var Promise     = require('promise');
 var path        = require('path');
 var _           = require('lodash');
-var base        = require('taskcluster-base');
 var api         = require('../lib/api');
 var taskcluster = require('taskcluster-client');
 var mocha       = require('mocha');
 var exchanges   = require('../lib/exchanges');
 let load = require('../lib/main');
+let config      = require('typed-env-config');
+let testing     = require('taskcluster-lib-testing');
 
 // Load configuration
-var cfg = base.config({profile: 'test'});
+var cfg = config({profile: 'test'});
 
 var testclients = {
   'test-client': ['*'],
@@ -27,7 +28,7 @@ if (!cfg.pulse.password) {
 }
 
 // Configure PulseTestReceiver
-helper.events = new base.testing.PulseTestReceiver(cfg.pulse, mocha);
+helper.events = new testing.PulseTestReceiver(cfg.pulse, mocha);
 
 // Hold reference to authServer
 var authServer = null;
@@ -36,7 +37,7 @@ var webServer = null;
 // Setup before tests
 mocha.before(async () => {
   // Create mock authentication server
-  base.testing.fakeauth.start(testclients);
+  testing.fakeauth.start(testclients);
 
   webServer = await load('server', {profile: 'test', process: 'test'});
 
@@ -77,5 +78,5 @@ mocha.beforeEach(() => {
 
 mocha.after(async () => {
   await webServer.terminate();
-  base.testing.fakeauth.stop();
+  testing.fakeauth.stop();
 });
