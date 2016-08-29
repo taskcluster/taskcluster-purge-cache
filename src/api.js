@@ -1,17 +1,17 @@
-let API      = require('taskcluster-lib-api');
+let _           = require('lodash');
+let API         = require('taskcluster-lib-api');
+let taskcluster = require('taskcluster-client');
 
 // Common schema prefix
 let SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
 
-/** API end-point for version v1/
- *
- * In this API implementation we shall assume the following context:
- * {
- *   publisher:      // publisher from pulse-publisher
- * }
- */
+/** API end-point for version v1/ */
 let api = new API({
   title:        'Purge Cache API Documentation',
+  context: [
+    'publisher',   // A pulse-publisher instance
+    'CacheBuster', // A data.CacheBuster instance
+  ],
   description: [
     'The purge-cache service, typically available at',
     '`purge-cache.taskcluster.net`, is responsible for publishing a pulse',
@@ -54,8 +54,102 @@ api.declare({
   // Publish message
   await this.publisher.purgeCache({provisionerId, workerType, cacheName});
 
+  try {
+    await this.CacheBuster.create({
+      workerType,
+      provisionerId,
+      cacheName,
+      before: new Date(),
+      expires: taskcluster.fromNow('1 day'),
+    });
+  } catch (err) {
+    if (err.code !== 'EntityAlreadyExists') {
+      throw err;
+    }
+    let cb = await this.CacheBuster.load({
+      workerType,
+      provisionerId,
+      cacheName,
+    });
+
+    await cb.modify(cacheBuster => {
+      cacheBuster.before = new Date();
+      cacheBuster.expires = taskcluster.fromNow('1 day');
+    });
+  }
+
   // Return 204
   res.status(204).send();
+});
+
+api.declare({
+  method:   'get',
+  route:    '/purge-requests',
+  query: {
+    continuationToken: /./,
+    limit: /^[0-9]+$/,
+  },
+  name:     'allPurgeRequests',
+  output:   SCHEMA_PREFIX_CONST + 'purge-cache-request-list.json#',
+  title:    'All Open Purge Requests',
+  description: [
+    'This is useful mostly for administors to view',
+    'the set of open purge requests. It should not',
+    'be used by workers. They should use the purgeRequests',
+    'endpoint that is specific to their workerType and',
+    'provisionerId.',
+  ].join('\n'),
+}, async function(req, res) {
+  let continuation  = req.query.continuationToken || null;
+  let limit         = parseInt(req.query.limit || 1000, 10);
+  let openRequests = await this.CacheBuster.scan({}, {continuation, limit});
+  return res.reply({
+    requests: _.map(openRequests.entries, entry => {
+      return {
+        provisionerId: entry.provisionerId,
+        workerType: entry.workerType,
+        cacheName: entry.cacheName,
+        before: entry.before.toJSON(),
+        expires: entry.expires.toJSON(),
+      };
+    }),
+  });
+});
+
+api.declare({
+  method:   'get',
+  route:    '/purge-requests/:provisionerId/:workerType',
+  query: {
+    continuationToken: /./,
+    limit: /^[0-9]+$/,
+  },
+  name:     'purgeRequests',
+  output:   SCHEMA_PREFIX_CONST + 'purge-cache-request-list.json#',
+  title:    'Open Purge Requests for a provisionerId/workerType pair',
+  description: [
+    'List of caches that need to be purged if they are from before',
+    'a certain time. This is safe to be used in automation from',
+    'workers.',
+  ].join('\n'),
+}, async function(req, res) {
+  let {provisionerId, workerType} = req.params;
+  let continuation  = req.query.continuationToken || null;
+  let limit         = parseInt(req.query.limit || 1000, 10);
+  let openRequests = await this.CacheBuster.query({
+    provisionerId,
+    workerType,
+  }, {continuation, limit});
+  return res.reply({
+    requests: _.map(openRequests.entries, entry => {
+      return {
+        provisionerId: entry.provisionerId,
+        workerType: entry.workerType,
+        cacheName: entry.cacheName,
+        before: entry.before.toJSON(),
+        expires: entry.expires.toJSON(),
+      };
+    }),
+  });
 });
 
 /** Check that the server is a alive */

@@ -1,3 +1,4 @@
+let assert = require('assert');
 let Entity = require('azure-entities');
 
 /**
@@ -9,12 +10,12 @@ let Entity = require('azure-entities');
  */
 let CacheBuster = Entity.configure({
   version:          1,
-  partitionKey:     Entity.keys.StringKey('workerType'),
-  rowKey:           Entity.keys.StringKey('provisionerId'),
+  partitionKey:     Entity.keys.CompositeKey('provisionerId', 'workerType'),
+  rowKey:           Entity.keys.StringKey('cacheName'),
   properties: {
     provisionerId:  Entity.types.String,
     workerType:     Entity.types.String,
-    cacheNames:     Entity.types.JSON,
+    cacheName:      Entity.types.String,
     before:         Entity.types.Date,
     expires:        Entity.types.Date,
   },

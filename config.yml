@@ -63,6 +63,8 @@ production:
     username:                     'taskcluster-purge-cache'
 
 test:
+  app:
+    cacheBusterExpirationDelay:   '7 days'
   server:
     publicUrl:                    'http://localhost:60415'
     port:                         60415

@@ -1,4 +1,5 @@
 let debug             = require('debug')('purge-cache');
+let assert            = require('assert');
 let path              = require('path');
 let Promise           = require('promise');
 let _                 = require('lodash');
@@ -79,9 +80,9 @@ let load = loader({
   },
 
   api: {
-    requires: ['cfg', 'monitor', 'validator', 'publisher'],
-    setup: ({cfg, monitor, validator, publisher}) => api.setup({
-      context:          {publisher},
+    requires: ['cfg', 'monitor', 'validator', 'publisher', 'CacheBuster'],
+    setup: ({cfg, monitor, validator, publisher, CacheBuster}) => api.setup({
+      context:          {publisher, CacheBuster},
       validator:        validator,
       publish:          process.env.NODE_ENV === 'production',
       baseUrl:          cfg.server.publicUrl + '/v1',
