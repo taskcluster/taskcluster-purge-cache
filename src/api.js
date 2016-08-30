@@ -135,7 +135,6 @@ api.declare({
 
   let {provisionerId, workerType} = req.params;
   let cacheKey = `${provisionerId}/${workerType}`;
-  let cachedReq = this.cacheBusterCache.cacheKey;
   let cacheHit = false;
   this.cacheBusterCache[cacheKey] = Promise.resolve(this.cacheBusterCache[cacheKey]).then(async cacheCache => {
     if (cacheCache && Date.now() - cacheCache.touched < this.cfg.app.cacheTime * 1000) {
