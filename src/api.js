@@ -9,8 +9,10 @@ let SCHEMA_PREFIX_CONST = 'http://schemas.taskcluster.net/purge-cache/v1/';
 let api = new API({
   title:        'Purge Cache API Documentation',
   context: [
-    'publisher',   // A pulse-publisher instance
-    'CacheBuster', // A data.CacheBuster instance
+    'cfg',              // A typed-env-config instance
+    'publisher',        // A pulse-publisher instance
+    'CacheBuster',      // A data.CacheBuster instance
+    'cacheBusterCache', // An Promise for cacheing cachebuster responses
   ],
   description: [
     'The purge-cache service, typically available at',
@@ -100,10 +102,11 @@ api.declare({
     'provisionerId.',
   ].join('\n'),
 }, async function(req, res) {
-  let continuation  = req.query.continuationToken || null;
-  let limit         = parseInt(req.query.limit || 1000, 10);
+  let continuation = req.query.continuationToken || null;
+  let limit = parseInt(req.query.limit || 1000, 10);
   let openRequests = await this.CacheBuster.scan({}, {continuation, limit});
   return res.reply({
+    cacheHit: false,
     requests: _.map(openRequests.entries, entry => {
       return {
         provisionerId: entry.provisionerId,
@@ -119,10 +122,6 @@ api.declare({
 api.declare({
   method:   'get',
   route:    '/purge-requests/:provisionerId/:workerType',
-  query: {
-    continuationToken: /./,
-    limit: /^[0-9]+$/,
-  },
   name:     'purgeRequests',
   output:   SCHEMA_PREFIX_CONST + 'purge-cache-request-list.json#',
   title:    'Open Purge Requests for a provisionerId/workerType pair',
@@ -132,14 +131,23 @@ api.declare({
     'workers.',
   ].join('\n'),
 }, async function(req, res) {
+
   let {provisionerId, workerType} = req.params;
-  let continuation  = req.query.continuationToken || null;
-  let limit         = parseInt(req.query.limit || 1000, 10);
-  let openRequests = await this.CacheBuster.query({
-    provisionerId,
-    workerType,
-  }, {continuation, limit});
+  let cacheKey = `${provisionerId}/${workerType}`;
+  let cachedReq = this.cacheBusterCache.cacheKey;
+  let cacheHit = false;
+  this.cacheBusterCache[cacheKey] = Promise.resolve(this.cacheBusterCache[cacheKey]).then(async cacheCache => {
+    if (cacheCache && Date.now() - cacheCache.touched < this.cfg.app.cacheTime * 1000) {
+      cacheHit = true;
+      return cacheCache;
+    }
+    return Promise.resolve({reqs: await this.CacheBuster.query({provisionerId, workerType}), touched: Date.now()});
+  });
+  let openRequests = await this.cacheBusterCache[cacheKey].then(cacheCache => {
+    return cacheCache.reqs;
+  });
   return res.reply({
+    cacheHit,
     requests: _.map(openRequests.entries, entry => {
       return {
         provisionerId: entry.provisionerId,

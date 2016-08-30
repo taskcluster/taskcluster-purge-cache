@@ -4,6 +4,7 @@ defaults:
     exchangePrefix:               'v1/'
     cacheBusterTableName:         'CacheBusters'
     cacheBusterExpirationDelay:   '- 1 hour'
+    cacheTime:                    10
 
   server:
     # Public URL from which the server can be accessed (used for persona)

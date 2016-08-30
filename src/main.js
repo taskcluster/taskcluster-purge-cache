@@ -82,7 +82,7 @@ let load = loader({
   api: {
     requires: ['cfg', 'monitor', 'validator', 'publisher', 'CacheBuster'],
     setup: ({cfg, monitor, validator, publisher, CacheBuster}) => api.setup({
-      context:          {publisher, CacheBuster},
+      context:          {cfg, publisher, CacheBuster, cacheBusterCache: {}},
       validator:        validator,
       publish:          process.env.NODE_ENV === 'production',
       baseUrl:          cfg.server.publicUrl + '/v1',

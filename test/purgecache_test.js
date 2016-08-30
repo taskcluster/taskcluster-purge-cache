@@ -54,7 +54,7 @@ suite('Purge-Cache', () => {
     openRequests = await helper.purgeCache.allPurgeRequests();
     assume(openRequests.requests.length).equals(2);
 
-    // Finally try with different worker/provisioner
+    // Try with different worker/provisioner
     await helper.purgeCache.purgeCache('dummy-provisioner-2', 'dummy-worker', {
       cacheName: 'my-test-cache',
     });
@@ -70,5 +70,10 @@ suite('Purge-Cache', () => {
     assume(spec.requests.length).equals(1);
     spec = await helper.purgeCache.purgeRequests('dummy-provisioner', 'dummy-worker');
     assume(spec.requests.length).equals(2);
+
+    // Finally we make sure the cache does things sometimes
+    spec = await helper.purgeCache.purgeRequests('dummy-provisioner', 'dummy-worker');
+    assume(spec.requests.length).equals(2);
+    assume(spec.cacheHit).true();
   });
 });
