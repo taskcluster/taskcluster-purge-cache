@@ -107,6 +107,7 @@ api.declare({
   let openRequests = await this.CacheBuster.scan({}, {continuation, limit});
   return res.reply({
     cacheHit: false,
+    continuationToken: openRequests.continuation || '',
     requests: _.map(openRequests.entries, entry => {
       return {
         provisionerId: entry.provisionerId,
