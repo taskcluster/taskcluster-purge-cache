@@ -22,7 +22,7 @@ let testclients = {
 let helper = module.exports = {};
 
 // Skip tests if no credentials is configured
-if (!cfg.pulse.password) {
+if (!cfg.pulse || !cfg.taskcluster) {
   console.log('Skip tests due to missing credentials!');
   process.exit(1);
 }
@@ -39,6 +39,7 @@ mocha.before(async () => {
   // Create mock authentication server
   testing.fakeauth.start(testclients);
 
+  await load('expire-cache-purges', {profile: 'test', process: 'test'});
   webServer = await load('server', {profile: 'test', process: 'test'});
 
   // Create client for working with API
@@ -65,7 +66,7 @@ mocha.before(async () => {
 
   // Create client for binding to reference
   let exchangeReference = exchanges.reference({
-    exchangePrefix:   cfg.purgeCache.exchangePrefix,
+    exchangePrefix:   cfg.app.exchangePrefix,
     credentials:      cfg.pulse,
   });
   helper.PurgeCacheEvents = taskcluster.createClient(exchangeReference);

@@ -1,14 +1,17 @@
-let debug             = require('debug')('purge-cache:server');
-let api               = require('./api');
+let debug             = require('debug')('purge-cache');
+let assert            = require('assert');
 let path              = require('path');
 let Promise           = require('promise');
-let exchanges         = require('./exchanges');
 let _                 = require('lodash');
 let config            = require('typed-env-config');
 let loader            = require('taskcluster-lib-loader');
 let monitor           = require('taskcluster-lib-monitor');
 let validate          = require('taskcluster-lib-validate');
 let server            = require('taskcluster-lib-app');
+let taskcluster       = require('taskcluster-client');
+let api               = require('./api');
+let exchanges         = require('./exchanges');
+let data              = require('./data');
 
 let load = loader({
   cfg: {
@@ -32,12 +35,39 @@ let load = loader({
     }),
   },
 
+  CachePurge: {
+    requires: ['cfg', 'monitor'],
+    setup: async ({cfg, monitor}) => data.CachePurge.setup({
+      account: cfg.azure.account,
+      table: cfg.app.cachePurgeTableName,
+      credentials: cfg.taskcluster.credentials,
+      monitor: monitor.prefix(cfg.app.cachePurgeTableName.toLowerCase()),
+    }),
+  },
+
+  'expire-cache-purges': {
+    requires: ['cfg', 'CachePurge', 'monitor'],
+    setup: async ({cfg, CachePurge, monitor}) => {
+      let now = taskcluster.fromNow(cfg.app.cachePurgeExpirationDelay);
+      assert(!_.isNaN(now), 'Can\'t have NaN as now');
+
+      // Expire task-groups using delay
+      debug('Expiring cache-purges at: %s, from before %s', new Date(), now);
+      let count = await CachePurge.expire(now);
+      debug('Expired %s cache-purges', count);
+
+      monitor.count('expire-cache-purges.done');
+      monitor.stopResourceMonitoring();
+      await monitor.flush();
+    },
+  },
+
   publisher: {
     requires: ['cfg', 'validator', 'monitor'],
     setup: ({cfg, validator, monitor}) =>
       exchanges.setup({
         credentials:        cfg.pulse,
-        exchangePrefix:     cfg.purgeCache.exchangePrefix,
+        exchangePrefix:     cfg.app.exchangePrefix,
         validator:          validator,
         referencePrefix:    'purge-cache/v1/exchanges.json',
         publish:            process.env.NODE_ENV === 'production',
@@ -47,9 +77,9 @@ let load = loader({
   },
 
   api: {
-    requires: ['cfg', 'monitor', 'validator', 'publisher'],
-    setup: ({cfg, monitor, validator, publisher}) => api.setup({
-      context:          {publisher},
+    requires: ['cfg', 'monitor', 'validator', 'publisher', 'CachePurge'],
+    setup: ({cfg, monitor, validator, publisher, CachePurge}) => api.setup({
+      context:          {cfg, publisher, CachePurge, cachePurgeCache: {}},
       validator:        validator,
       publish:          process.env.NODE_ENV === 'production',
       baseUrl:          cfg.server.publicUrl + '/v1',

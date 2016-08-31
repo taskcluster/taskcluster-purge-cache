@@ -1,9 +1,10 @@
 ---
 defaults:
-  # TaskCluster purge cache configuration
-  purgeCache:
-    # Prefix for exchanges declared
-    exchangePrefix:               'v1/'
+  app:
+    exchangePrefix:              'v1/'
+    cachePurgeTableName:         'CachePurges'
+    cachePurgeExpirationDelay:   '- 1 hour'
+    cacheTime:                   10
 
   server:
     # Public URL from which the server can be accessed (used for persona)
@@ -20,6 +21,9 @@ defaults:
 
     # Trust a forwarding proxy
     trustProxy:                     false
+
+  azure:
+    account:                  !env AZURE_ACCOUNT_NAME
 
   pulse:
     username:                 !env PULSE_USERNAME
@@ -49,7 +53,6 @@ defaults:
 
 production:
   server:
-    publicUrl:                    'https://purge-cache.taskcluster.net'
     env:                          'production'
     forceSSL:                     true
     # We trust the proxy on heroku as the SSL end-point provided by heroku
@@ -60,6 +63,8 @@ production:
     username:                     'taskcluster-purge-cache'
 
 test:
+  app:
+    cachePurgeExpirationDelay:   '7 days'
   server:
     publicUrl:                    'http://localhost:60415'
     port:                         60415

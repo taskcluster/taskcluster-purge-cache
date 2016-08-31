@@ -1,8 +1,14 @@
 ---
 defaults:
+  azure:
+    account: "..."
   pulse:
     username: "..."
     password: "..."
+  taskcluster:
+    credentials:
+      clientId: "..."
+      accessToken: "..."
 verify:
   taskcluster:
     # These credentials must have the scopes:

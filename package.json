@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "assume": "^1.4.1",
+    "azure-entities": "^1.0.2",
     "babel-compile": "^2.0.0",
     "babel-eslint": "^6.0.0",
     "babel-preset-taskcluster": "^3.0.0",
