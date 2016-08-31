@@ -35,31 +35,28 @@ let load = loader({
     }),
   },
 
-  CacheBuster: {
+  CachePurge: {
     requires: ['cfg', 'monitor'],
-    setup: async ({cfg, monitor}) => {
-      let CacheBuster = data.CacheBuster.setup({
-        table:            cfg.app.cacheBusterTableName,
-        credentials:      cfg.azure,
-        monitor:          monitor.prefix('table.cachebusters'),
-      });
-      await CacheBuster.ensureTable();
-      return CacheBuster;
-    },
+    setup: async ({cfg, monitor}) => data.CachePurge.setup({
+      account: cfg.azure.account,
+      table: cfg.app.cachePurgeTableName,
+      credentials: cfg.taskcluster.credentials,
+      monitor: monitor.prefix(cfg.app.cachePurgeTableName.toLowerCase()),
+    }),
   },
 
-  'expire-cache-busters': {
-    requires: ['cfg', 'CacheBuster', 'monitor'],
-    setup: async ({cfg, CacheBuster, monitor}) => {
-      let now = taskcluster.fromNow(cfg.app.cacheBusterExpirationDelay);
+  'expire-cache-purges': {
+    requires: ['cfg', 'CachePurge', 'monitor'],
+    setup: async ({cfg, CachePurge, monitor}) => {
+      let now = taskcluster.fromNow(cfg.app.cachePurgeExpirationDelay);
       assert(!_.isNaN(now), 'Can\'t have NaN as now');
 
       // Expire task-groups using delay
-      debug('Expiring cache-busters at: %s, from before %s', new Date(), now);
-      let count = await CacheBuster.expire(now);
-      debug('Expired %s cache-busters', count);
+      debug('Expiring cache-purges at: %s, from before %s', new Date(), now);
+      let count = await CachePurge.expire(now);
+      debug('Expired %s cache-purges', count);
 
-      monitor.count('expire-cache-busters.done');
+      monitor.count('expire-cache-purges.done');
       monitor.stopResourceMonitoring();
       await monitor.flush();
     },
@@ -80,9 +77,9 @@ let load = loader({
   },
 
   api: {
-    requires: ['cfg', 'monitor', 'validator', 'publisher', 'CacheBuster'],
-    setup: ({cfg, monitor, validator, publisher, CacheBuster}) => api.setup({
-      context:          {cfg, publisher, CacheBuster, cacheBusterCache: {}},
+    requires: ['cfg', 'monitor', 'validator', 'publisher', 'CachePurge'],
+    setup: ({cfg, monitor, validator, publisher, CachePurge}) => api.setup({
+      context:          {cfg, publisher, CachePurge, cachePurgeCache: {}},
       validator:        validator,
       publish:          process.env.NODE_ENV === 'production',
       baseUrl:          cfg.server.publicUrl + '/v1',

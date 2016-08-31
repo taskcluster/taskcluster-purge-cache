@@ -8,7 +8,7 @@ let Entity = require('azure-entities');
  * be purged.
  *
  */
-let CacheBuster = Entity.configure({
+let CachePurge = Entity.configure({
   version:          1,
   partitionKey:     Entity.keys.CompositeKey('provisionerId', 'workerType'),
   rowKey:           Entity.keys.StringKey('cacheName'),
@@ -22,23 +22,23 @@ let CacheBuster = Entity.configure({
 });
 
 /**
- * Expire cacheBusters that are past their expiration.
+ * Expire cachePurges that are past their expiration.
  *
- * Returns a promise that all expired cacheBusters have been deleted
+ * Returns a promise that all expired cachePurges have been deleted
  */
-CacheBuster.expire = async function(now) {
+CachePurge.expire = async function(now) {
   assert(now instanceof Date, 'now must be given as option');
   var count = 0;
   await Entity.scan.call(this, {
     expires:          Entity.op.lessThan(now),
   }, {
     limit:            250, // max number of concurrent delete operations
-    handler:          (cacheBuster) => {
+    handler:          (cachePurge) => {
       count++;
-      return cacheBuster.remove(true);
+      return cachePurge.remove(true);
     },
   });
   return count;
 };
 
-module.exports = {CacheBuster};
+module.exports = {CachePurge};

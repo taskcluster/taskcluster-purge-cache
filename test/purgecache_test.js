@@ -35,17 +35,15 @@ suite('Purge-Cache', () => {
     assume(request.cacheName).equals('my-test-cache');
     assume(request.provisionerId).equals('dummy-provisioner');
     assume(request.workerType).equals('dummy-worker');
-    let firstExpires = new Date(request.expires);
-    let delta = new Date(request.expires) - new Date(request.before);
-    assume(delta).is.between(86399990, 86400010); // About a day
+    let firstBefore = new Date(request.before);
 
     // Check if we can override and update an existing request
     await helper.purgeCache.purgeCache('dummy-provisioner', 'dummy-worker', {
       cacheName: 'my-test-cache',
     });
     openRequests = await helper.purgeCache.allPurgeRequests();
-    let newExpires = new Date(openRequests.requests[0].expires);
-    assume(newExpires.valueOf()).is.gt(firstExpires.valueOf());
+    let newBefore = new Date(openRequests.requests[0].before);
+    assume(newBefore.valueOf()).is.gt(firstBefore.valueOf());
 
     // Add a second request
     await helper.purgeCache.purgeCache('dummy-provisioner', 'dummy-worker', {

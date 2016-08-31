@@ -26,10 +26,6 @@ properties:
         cacheName:
           type: string
           description: Name of cache to purge.
-        expires:
-          type: string
-          format: date-time
-          description: When this purge-cache-request will expire.
         before:
           type: string
           format: date-time
@@ -40,7 +36,6 @@ properties:
         - provisionerId
         - workerType
         - cacheName
-        - expires
         - before
 additionalProperties: false
 required:

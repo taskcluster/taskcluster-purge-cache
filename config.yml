@@ -1,10 +1,10 @@
 ---
 defaults:
   app:
-    exchangePrefix:               'v1/'
-    cacheBusterTableName:         'CacheBusters'
-    cacheBusterExpirationDelay:   '- 1 hour'
-    cacheTime:                    10
+    exchangePrefix:              'v1/'
+    cachePurgeTableName:         'CachePurges'
+    cachePurgeExpirationDelay:   '- 1 hour'
+    cacheTime:                   10
 
   server:
     # Public URL from which the server can be accessed (used for persona)
@@ -22,13 +22,12 @@ defaults:
     # Trust a forwarding proxy
     trustProxy:                     false
 
+  azure:
+    account:                  !env AZURE_ACCOUNT_NAME
+
   pulse:
     username:                 !env PULSE_USERNAME
     password:                 !env PULSE_PASSWORD
-
-  azure:
-    accountName:              !env AZURE_ACCOUNT_NAME
-    accountKey:               !env AZURE_ACCOUNT_KEY
 
   taskcluster:
     credentials:
@@ -65,7 +64,7 @@ production:
 
 test:
   app:
-    cacheBusterExpirationDelay:   '7 days'
+    cachePurgeExpirationDelay:   '7 days'
   server:
     publicUrl:                    'http://localhost:60415'
     port:                         60415

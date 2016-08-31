@@ -11,8 +11,8 @@ let api = new API({
   context: [
     'cfg',              // A typed-env-config instance
     'publisher',        // A pulse-publisher instance
-    'CacheBuster',      // A data.CacheBuster instance
-    'cacheBusterCache', // An Promise for cacheing cachebuster responses
+    'CachePurge',      // A data.CachePurge instance
+    'cachePurgeCache', // An Promise for cacheing cachepurge responses
   ],
   description: [
     'The purge-cache service, typically available at',
@@ -57,7 +57,7 @@ api.declare({
   await this.publisher.purgeCache({provisionerId, workerType, cacheName});
 
   try {
-    await this.CacheBuster.create({
+    await this.CachePurge.create({
       workerType,
       provisionerId,
       cacheName,
@@ -68,15 +68,15 @@ api.declare({
     if (err.code !== 'EntityAlreadyExists') {
       throw err;
     }
-    let cb = await this.CacheBuster.load({
+    let cb = await this.CachePurge.load({
       workerType,
       provisionerId,
       cacheName,
     });
 
-    await cb.modify(cacheBuster => {
-      cacheBuster.before = new Date();
-      cacheBuster.expires = taskcluster.fromNow('1 day');
+    await cb.modify(cachePurge => {
+      cachePurge.before = new Date();
+      cachePurge.expires = taskcluster.fromNow('1 day');
     });
   }
 
@@ -86,7 +86,7 @@ api.declare({
 
 api.declare({
   method:   'get',
-  route:    '/purge-requests',
+  route:    '/purge-cache/list',
   query: {
     continuationToken: /./,
     limit: /^[0-9]+$/,
@@ -104,7 +104,7 @@ api.declare({
 }, async function(req, res) {
   let continuation = req.query.continuationToken || null;
   let limit = parseInt(req.query.limit || 1000, 10);
-  let openRequests = await this.CacheBuster.scan({}, {continuation, limit});
+  let openRequests = await this.CachePurge.scan({}, {continuation, limit});
   return res.reply({
     cacheHit: false,
     continuationToken: openRequests.continuation || '',
@@ -114,7 +114,6 @@ api.declare({
         workerType: entry.workerType,
         cacheName: entry.cacheName,
         before: entry.before.toJSON(),
-        expires: entry.expires.toJSON(),
       };
     }),
   });
@@ -122,7 +121,7 @@ api.declare({
 
 api.declare({
   method:   'get',
-  route:    '/purge-requests/:provisionerId/:workerType',
+  route:    '/purge-cache/:provisionerId/:workerType',
   name:     'purgeRequests',
   output:   SCHEMA_PREFIX_CONST + 'purge-cache-request-list.json#',
   title:    'Open Purge Requests for a provisionerId/workerType pair',
@@ -136,16 +135,16 @@ api.declare({
   let {provisionerId, workerType} = req.params;
   let cacheKey = `${provisionerId}/${workerType}`;
   let cacheHit = false;
-  this.cacheBusterCache[cacheKey] = Promise.resolve(this.cacheBusterCache[cacheKey]).then(async cacheCache => {
+
+  this.cachePurgeCache[cacheKey] = Promise.resolve(this.cachePurgeCache[cacheKey]).then(async cacheCache => {
     if (cacheCache && Date.now() - cacheCache.touched < this.cfg.app.cacheTime * 1000) {
       cacheHit = true;
       return cacheCache;
     }
-    return Promise.resolve({reqs: await this.CacheBuster.query({provisionerId, workerType}), touched: Date.now()});
+    return Promise.resolve({reqs: await this.CachePurge.query({provisionerId, workerType}), touched: Date.now()});
   });
-  let openRequests = await this.cacheBusterCache[cacheKey].then(cacheCache => {
-    return cacheCache.reqs;
-  });
+
+  let {reqs: openRequests} = await this.cachePurgeCache[cacheKey];
   return res.reply({
     cacheHit,
     requests: _.map(openRequests.entries, entry => {
@@ -154,7 +153,6 @@ api.declare({
         workerType: entry.workerType,
         cacheName: entry.cacheName,
         before: entry.before.toJSON(),
-        expires: entry.expires.toJSON(),
       };
     }),
   });
