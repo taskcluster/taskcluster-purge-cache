@@ -122,6 +122,9 @@ api.declare({
 api.declare({
   method:   'get',
   route:    '/purge-cache/:provisionerId/:workerType',
+  query: {
+    since: dt => Date.parse(dt) ? null : 'Invalid Date',
+  },
   name:     'purgeRequests',
   output:   SCHEMA_PREFIX_CONST + 'purge-cache-request-list.json#',
   title:    'Open Purge Requests for a provisionerId/workerType pair',
@@ -135,6 +138,7 @@ api.declare({
   let {provisionerId, workerType} = req.params;
   let cacheKey = `${provisionerId}/${workerType}`;
   let cacheHit = false;
+  let since = new Date(req.query.since || 0);
 
   this.cachePurgeCache[cacheKey] = Promise.resolve(this.cachePurgeCache[cacheKey]).then(async cacheCache => {
     if (cacheCache && Date.now() - cacheCache.touched < this.cfg.app.cacheTime * 1000) {
@@ -147,14 +151,17 @@ api.declare({
   let {reqs: openRequests} = await this.cachePurgeCache[cacheKey];
   return res.reply({
     cacheHit,
-    requests: _.map(openRequests.entries, entry => {
-      return {
-        provisionerId: entry.provisionerId,
-        workerType: entry.workerType,
-        cacheName: entry.cacheName,
-        before: entry.before.toJSON(),
-      };
-    }),
+    requests: _.reduce(openRequests.entries, (l, entry) => {
+      if (entry.before >= since) {
+        l.push({
+          provisionerId: entry.provisionerId,
+          workerType: entry.workerType,
+          cacheName: entry.cacheName,
+          before: entry.before.toJSON(),
+        });
+      }
+      return l;
+    }, []),
   });
 });
 

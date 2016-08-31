@@ -69,9 +69,29 @@ suite('Purge-Cache', () => {
     spec = await helper.purgeCache.purgeRequests('dummy-provisioner', 'dummy-worker');
     assume(spec.requests.length).equals(2);
 
-    // Finally we make sure the cache does things sometimes
+    // Make sure the cache does things sometimes
     spec = await helper.purgeCache.purgeRequests('dummy-provisioner', 'dummy-worker');
     assume(spec.requests.length).equals(2);
     assume(spec.cacheHit).true();
+
+    // Finally we try with since included
+    spec = await helper.purgeCache.purgeRequests(
+      'dummy-provisioner',
+      'dummy-worker',
+      {since: spec.requests[0].before}
+    );
+    assume(spec.requests.length).equals(2);
+    spec = await helper.purgeCache.purgeRequests(
+      'dummy-provisioner',
+      'dummy-worker',
+      {since: spec.requests[1].before}
+    );
+    assume(spec.requests.length).equals(1);
+    spec = await helper.purgeCache.purgeRequests(
+      'dummy-provisioner',
+      'dummy-worker',
+      {since: new Date().toJSON()}
+    );
+    assume(spec.requests.length).equals(0);
   });
 });
