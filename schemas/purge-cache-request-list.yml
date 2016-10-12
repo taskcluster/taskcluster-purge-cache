@@ -4,6 +4,9 @@ description: |
   A list of currently open purge-cache requests.
 type:         object
 properties:
+  cacheHit:
+    type: boolean
+    description: True if the cache has been used in this request.
   requests:
     type:         array
     description: |
