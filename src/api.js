@@ -110,7 +110,6 @@ api.declare({
   let limit = parseInt(req.query.limit || 1000, 10);
   let openRequests = await this.CachePurge.scan({}, {continuation, limit});
   return res.reply({
-    cacheHit: false,
     continuationToken: openRequests.continuation || '',
     requests: _.map(openRequests.entries, entry => {
       return {
