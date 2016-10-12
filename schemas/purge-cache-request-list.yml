@@ -37,3 +37,4 @@ properties:
 additionalProperties: false
 required:
   - requests
+  - cacheHit

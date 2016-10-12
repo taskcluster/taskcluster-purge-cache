@@ -7,9 +7,6 @@ properties:
   continuationToken:
     type: string
     description: Passed back from Azure to allow us to page through long result sets.
-  cacheHit:
-    type: boolean
-    description: True if the cache has been used in this request.
   requests:
     type:         array
     description: |
@@ -40,4 +37,3 @@ properties:
 additionalProperties: false
 required:
   - requests
-  - cacheHit
