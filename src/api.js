@@ -176,7 +176,7 @@ api.declare({
   title:    'Ping Server',
   description: [
     'Respond without doing anything.',
-    'This endpoint is used to check that the service is up.'
+    'This endpoint is used to check that the service is up.',
   ].join('\n'),
 }, function(req, res) {
 
