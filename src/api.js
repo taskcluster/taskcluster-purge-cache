@@ -173,6 +173,7 @@ api.declare({
   method:   'get',
   route:    '/ping',
   name:     'ping',
+  stability:  'stable',
   title:    'Ping Server',
   description: [
     'Respond without doing anything.',
