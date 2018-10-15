@@ -85,6 +85,9 @@ exports.withEntities = (mock, skipping, options={}) => {
     setup(cleanup);
   }
   suiteTeardown(async function() {
+    if (skipping()) {
+      return;
+    }
     exports.load.restore();
     await cleanup();
   });
@@ -130,6 +133,9 @@ exports.withPulse = (mock, skipping) => {
   });
 
   suiteTeardown(async function() {
+    if (skipping()) {
+      return;
+    }
     exports.load.restore();
   });
 
